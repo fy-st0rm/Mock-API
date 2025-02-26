@@ -8,7 +8,11 @@ use Illuminate\Http\JsonResponse;
 use App\Models\User;
 
 /**
- * @OA\Info(title="User Api", version="1.0")
+ * @OA\Info(
+ *     title="User API",
+ *     version="1.0",
+ *     description="API for managing users"
+ * )
  */
 class UserController extends Controller
 {
@@ -17,6 +21,7 @@ class UserController extends Controller
      *     path="/api/users",
      *     summary="Get all users",
      *     tags={"Users"},
+     *     security={{ "bearer": {} }},
      *     @OA\Parameter(
      *         name="id",
      *         in="query",
@@ -40,6 +45,17 @@ class UserController extends Controller
      *                 property="error",
      *                 type="string",
      *                 example="User not found"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthenticated",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Unauthenticated"
      *             )
      *         )
      *     ),

@@ -170,6 +170,12 @@ return [
         */
         'securityDefinitions' => [
             'securitySchemes' => [
+                'bearer' => [
+                    'type' => 'apiKey',
+                    'description' => 'Enter token in format (Bearer apiKey)',
+                    'name' => 'Authorization',
+                    'in' => 'header',
+                ],
                 /*
                  * Examples of Security schemes
                  */
