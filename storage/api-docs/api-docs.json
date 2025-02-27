@@ -1,11 +1,94 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "User API",
+        "title": "API",
         "description": "API for managing users",
         "version": "1.0"
     },
     "paths": {
+        "/api/apims/execute": {
+            "post": {
+                "tags": [
+                    "APIMS"
+                ],
+                "summary": "Executes the api",
+                "operationId": "7dcd8e139f6c2d48a14cc3f312131eb9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "function"
+                                ],
+                                "properties": {
+                                    "function": {
+                                        "type": "string",
+                                        "example": "Name of function to execute"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "example": {
+                                            "key": "value"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "401": {
+                        "description": "Unauthenticated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Unauthenticated"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation failed."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "function": "The function name must be a string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ]
+            }
+        },
         "/api/token/generate": {
             "post": {
                 "tags": [
@@ -180,13 +263,17 @@
         "securitySchemes": {
             "bearer": {
                 "type": "apiKey",
-                "description": "Enter token in format (Bearer <token>)",
+                "description": "Enter token in format (Bearer apiKey)",
                 "name": "Authorization",
                 "in": "header"
             }
         }
     },
     "tags": [
+        {
+            "name": "APIMS",
+            "description": "APIMS"
+        },
         {
             "name": "Authentication",
             "description": "Authentication"

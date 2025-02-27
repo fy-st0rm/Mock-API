@@ -7,13 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\User;
 
-/**
- * @OA\Info(
- *     title="User API",
- *     version="1.0",
- *     description="API for managing users"
- * )
- */
 class UserController extends Controller
 {
     /**
