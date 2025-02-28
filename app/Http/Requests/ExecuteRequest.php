@@ -38,11 +38,6 @@ class ExecuteRequest extends FormRequest
         ];
     }
 
-    public function getValidatedData(): array
-    {
-        return $this->input("data");
-    }
-
     protected function withValidator($validator)
     {
         $validator->after(function ($validator) {

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExecuteRequest;
-use App\Http\Requests\AccountInquiryRequest;
+use App\Models\ResponseFormat;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -88,12 +88,35 @@ class ApiMSController extends Controller
             return response()->json(["message" => "Invalid function name"], 500);
         }
 
-        $data = $request->getValidatedData();
-        return $this->$function($data);
+        $responseFormat = ResponseFormat::where("function", $function)->first();
+        if (!$responseFormat) {
+            return response()->json(["message" => "Response format for $function not found."], 500);
+        }
+
+        return $this->$function($data, $responseFormat->response);
     }
 
-    function AccountInquiry(array $data): JsonResponse
+    function AccountInquiry(array $data, string $responseFormat): JsonResponse
     {
-        return response()->json($data["acctNo"], 200);
+        $responseFormat = str_replace('[[ACCT_SHORT_NAME]]', fake()->name(), $responseFormat);
+        $responseFormat = str_replace('[[SOL_ID]]', fake()->numberBetween(1000, 9999), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_NAME]]', fake()->name(), $responseFormat);
+        $responseFormat = str_replace('[[CUST_ID]]', fake()->randomNumber(9, true), $responseFormat);
+        $responseFormat = str_replace('[[SCHM_CODE]]', fake()->word(), $responseFormat);
+        $responseFormat = str_replace('[[GL_SUB_HEAD_CODE]]', fake()->word(), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_CLS_FLG]]', fake()->randomElement(['Y', 'N']), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_CRNCY_CODE]]', fake()->currencyCode(), $responseFormat);
+        $responseFormat = str_replace('[[SCHM_TYPE]]', fake()->word(), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_OPN_DATE]]', fake()->dateTimeThisDecade()->format('d/m/Y H:i:s'), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_CLS_DATE]]', fake()->dateTimeThisDecade()->format('d/m/Y H:i:s'), $responseFormat);
+        $responseFormat = str_replace('[[FREZ_CODE]]', fake()->randomLetter(), $responseFormat);
+        $responseFormat = str_replace('[[FREZ_REASON_CODE]]', fake()->word(), $responseFormat);
+        $responseFormat = str_replace('[[NRB_DEPOSIT_LOAN_DETAIL]]', fake()->randomLetter(), $responseFormat);
+        $responseFormat = str_replace('[[NRB_DEPOSIT_DETAIL]]', fake()->randomLetter(), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_POA_AS_REC_TYPE]]', fake()->randomLetter(), $responseFormat);
+        $responseFormat = str_replace('[[ACCT_POA_AS_NAME]]', fake()->name(), $responseFormat);
+
+        $jsonData = json_decode($responseFormat);
+        return response()->json($jsonData, 200);
     }
 }
