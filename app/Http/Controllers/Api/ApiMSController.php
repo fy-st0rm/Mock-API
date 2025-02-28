@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExecuteRequest;
+use App\Http\Requests\AccountInquiryRequest;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\JsonResponse;
 
 class ApiMSController extends Controller
 {
@@ -64,6 +66,17 @@ class ApiMSController extends Controller
      *             ),
      *         ),
      *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Bad Request",
+     *         @OA\JsonContent(
+     *             @OA\Property(
+     *                 property="message",
+     *                 type="string",
+     *                 example="Invalid function name",
+     *             ),
+     *         ),
+     *     ),
      * )
      */
     public function execute(ExecuteRequest $request)
@@ -71,13 +84,16 @@ class ApiMSController extends Controller
         $function = $request->input("function");
         $data = $request->input("data");
 
-        if (method_exists($this, $function)) {
-           return $this->$function();
+        if (!method_exists($this, $function)) {
+            return response()->json(["message" => "Invalid function name"], 500);
         }
-        return "wrong function name";
+
+        $data = $request->getValidatedData();
+        return $this->$function($data);
     }
 
-    public function test() {
-        return "From test function";
+    function AccountInquiry(array $data): JsonResponse
+    {
+        return response()->json($data["acctNo"], 200);
     }
 }

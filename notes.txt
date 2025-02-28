@@ -1,0 +1,52 @@
+tbl_response_format
+id | function_name | response_format | failed_format
+
+AccountInquiry
+'acctNo' => $data->account_number,
+
+CibScreening
+if($isCorporate){
+    $blackListCustData = [
+        'name' => $request->full_name,
+        'PanNumber' => $cif_details['GeneralDetails'][0]['PAN_VAT_NO']
+    ];
+}else{
+    $blackListCustData = [
+        'name' => $request->full_name,
+        'citizenship' => $kyc_details['GeneralDetails'][0]['IDNO'],
+    ];
+}
+
+
+ComplienceScreeningAPI
+$customerData = [
+    'name' => trim($request->customer_name),
+];
+
+ReqCustInq
+$customerData = [
+    'acctNo' => $data->account_number,
+];
+
+DeduplicationCheck
+if(!is_null($request->citizenship)){
+    $customerData = [
+        'name' => $customerName,
+        'uniqueid' => $request->citizenship,
+    ];
+}else{
+    $customerData = [
+        'name' => $customerName,
+    ];
+}
+
+CorpCustInq
+$customerData = [
+                'cust_id' => $request->customer_id,
+            ];
+
+
+SignatureInq
+$customerData = [
+                'accountNo' => $request->account_number,
+            ];
