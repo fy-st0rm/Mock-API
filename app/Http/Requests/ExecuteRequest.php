@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Validators\AccountInquiryValidator;
+use App\Validators\CibScreeningValidator;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Contracts\Validation\Validator as ValidationContract;
@@ -11,8 +12,10 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ExecuteRequest extends FormRequest
 {
+    // Validators for all functions
     protected $functionValidators= [
         "AccountInquiry" => AccountInquiryValidator::class,
+        "CibScreening" => CibScreeningValidator::class,
     ];
 
     public function authorize(): bool
