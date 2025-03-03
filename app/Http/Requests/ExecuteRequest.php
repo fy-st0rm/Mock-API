@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Validators\AccountInquiryValidator;
 use App\Validators\CibScreeningValidator;
+use App\Validators\ComplienceScreeningAPIValidator;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Contracts\Validation\Validator as ValidationContract;
@@ -16,6 +17,7 @@ class ExecuteRequest extends FormRequest
     protected $functionValidators= [
         "AccountInquiry" => AccountInquiryValidator::class,
         "CibScreening" => CibScreeningValidator::class,
+        "ComplienceScreeningAPI" => ComplienceScreeningAPIValidator::class,
     ];
 
     public function authorize(): bool
@@ -28,6 +30,7 @@ class ExecuteRequest extends FormRequest
         return [
             "function" => "required|string",
             "data" => "required|array",
+            "response_type" => "required|string|in:json,xml",
         ];
     }
 
@@ -38,6 +41,9 @@ class ExecuteRequest extends FormRequest
             "function.string" => "The function name must be a string",
             "data.required" => "Data for the function is required",
             "data.array" => "Data must be a JSON object",
+            "response_type.required" => "response_type field is required (json|xml)",
+            "response_type.string" => "response_type must be a string (json|xml)",
+            "response_type.in" => "response_type field must be either json or xml",
         ];
     }
 

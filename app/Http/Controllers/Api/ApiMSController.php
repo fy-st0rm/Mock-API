@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExecuteRequest;
+use App\Http\Formatter;
 use App\Models\ResponseFormat;
 use App\Models\CibScreeningData;
+use App\Models\ComplienceScreeningAPIData;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -84,6 +86,7 @@ class ApiMSController extends Controller
     {
         $function = $request->input("function");
         $data = $request->input("data");
+        $response_type = $request->input("response_type");
 
         if (!method_exists($this, $function)) {
             return response()->json(["message" => "Invalid function name"], 500);
@@ -192,6 +195,81 @@ class ApiMSController extends Controller
         $responseFormat = str_replace('[[CompanyRegNumber]]', $record->company_reg_number, $responseFormat);
         $responseFormat = str_replace('[[CompanyRegDate]]', $record->company_reg_date, $responseFormat);
         $responseFormat = str_replace('[[CompanyRegAuth]]', $record->company_reg_auth, $responseFormat);
+
+        $jsonData = json_decode($responseFormat, true);
+        return response()->json($jsonData, 200);
+    }
+
+    function ComplienceScreeningAPI(array $data, string $responseFormat): JsonResponse
+    {
+        $record = ComplienceScreeningAPIData::where("name", $data["name"])
+            ->first();
+
+        if (!$record) {
+            $address = fake()->address();
+            $sanitizedAddress = str_replace("\n", " ", $address); // Replace newline characters with space
+
+            $record = ComplienceScreeningAPIData::create([
+                'sno' => fake()->uuid(),
+                'ofac_key' => fake()->uuid(),
+                'ent_num' => fake()->randomNumber(5, true),
+                'name' => $data["name"],
+                'typeV' => fake()->randomElement(['Individual', 'Organization']),
+                'address' => $sanitizedAddress,  // Use sanitized address here
+                'city' => fake()->city(),
+                'state' => fake()->state(),
+                'zip' => fake()->postcode(),
+                'country' => fake()->country(),
+                'remarks' => fake()->sentence(),
+                'type_sort' => fake()->word(),
+                'from_file' => fake()->word() . '.csv',
+                'source' => fake()->company(),
+                'manual_ofac_id' => fake()->uuid(),
+                'intEnt' => fake()->boolean(),
+                'name2' => fake()->name(),
+                'DOB' => fake()->date(),
+                'Metaphone' => fake()->word(),
+                'Alternative_Script' => fake()->word(),
+                'SoundexAplha' => strtoupper(fake()->lexify('???')),
+                'DOB_YEAR' => fake()->year(),
+                'DOB_MONTH' => fake()->month(),
+                'Other_Name' => fake()->name(),
+                'insertion_time' => fake()->dateTime(),
+                'modification_time' => fake()->dateTime(),
+                'ACCUITY_UPDATE' => fake()->dateTime(),
+                'is_deleted' => fake()->boolean(10), // 10% chance of being true
+            ]);
+        }
+
+        // Filling the the response
+        $responseFormat = str_replace('[[sno]]', $record->sno, $responseFormat);
+        $responseFormat = str_replace('[[ofac_key]]', $record->ofac_key, $responseFormat);
+        $responseFormat = str_replace('[[ent_num]]', $record->ent_num, $responseFormat);
+        $responseFormat = str_replace('[[name]]', $record->name, $responseFormat);
+        $responseFormat = str_replace('[[typeV]]', $record->type_v, $responseFormat);
+        $responseFormat = str_replace('[[address]]', $record->address, $responseFormat);
+        $responseFormat = str_replace('[[city]]', $record->city, $responseFormat);
+        $responseFormat = str_replace('[[state]]', $record->state, $responseFormat);
+        $responseFormat = str_replace('[[zip]]', $record->zip, $responseFormat);
+        $responseFormat = str_replace('[[country]]', $record->country, $responseFormat);
+        $responseFormat = str_replace('[[remarks]]', $record->remarks, $responseFormat);
+        $responseFormat = str_replace('[[type_sort]]', $record->type_sort, $responseFormat);
+        $responseFormat = str_replace('[[from_file]]', $record->from_file, $responseFormat);
+        $responseFormat = str_replace('[[source]]', $record->source, $responseFormat);
+        $responseFormat = str_replace('[[manual_ofac_id]]', $record->manual_ofac_id, $responseFormat);
+        $responseFormat = str_replace('[[intEnt]]', $record->int_ent, $responseFormat);
+        $responseFormat = str_replace('[[name2]]', $record->name2, $responseFormat);
+        $responseFormat = str_replace('[[DOB]]', $record->dob, $responseFormat);
+        $responseFormat = str_replace('[[Metaphone]]', $record->metaphone, $responseFormat);
+        $responseFormat = str_replace('[[Alternative_Script]]', $record->alternative_script, $responseFormat);
+        $responseFormat = str_replace('[[SoundexAplha]]', $record->soundex_aplha, $responseFormat);
+        $responseFormat = str_replace('[[DOB_YEAR]]', $record->dob_year, $responseFormat);
+        $responseFormat = str_replace('[[DOB_MONTH]]', $record->dob_month, $responseFormat);
+        $responseFormat = str_replace('[[Other_Name]]', $record->other_name, $responseFormat);
+        $responseFormat = str_replace('[[insertion_time]]', $record->insertion_time, $responseFormat);
+        $responseFormat = str_replace('[[modification_time]]', $record->modification_time, $responseFormat);
+        $responseFormat = str_replace('[[ACCUITY_UPDATE]]', $record->accuity_update, $responseFormat);
+        $responseFormat = str_replace('[[is_deleted]]', $record->is_deleted, $responseFormat);
 
         $jsonData = json_decode($responseFormat, true);
         return response()->json($jsonData, 200);
