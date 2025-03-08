@@ -5,9 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ExecuteRequest;
 use App\Http\Formatter;
-use App\Models\ResponseFormat;
-use App\Models\CibScreeningData;
-use App\Models\ComplienceScreeningAPIData;
 use App\Responses;
 
 use Illuminate\Http\Request;
@@ -96,15 +93,10 @@ class ApiMSController extends Controller
             return response()->json(["message" => "Invalid function name"], 500);
         }
 
-        $responseFormat = ResponseFormat::where("function", $function)->first();
-        if (!$responseFormat) {
-            return response()->json(["message" => "Response format for $function not found."], 500);
-        }
-
-        return $this->$function($data, $responseFormat->response);
+        return $this->$function($data);
     }
 
-    function AccountInquiry(array $data, string $responseFormat): JsonResponse
+    function AccountInquiry(array $data): JsonResponse
     {
         $acctNo = $data["acctNo"];
 
@@ -166,7 +158,7 @@ class ApiMSController extends Controller
         );
     }
 
-    function CibScreening(array $data, string $responseFormat): JsonResponse
+    function CibScreening(array $data): JsonResponse
     {
         $name = $data["name"];
         $record = DB::table("CibScreening")
@@ -228,7 +220,7 @@ class ApiMSController extends Controller
         return Responses::CibScreeningResponse($queryResult);
     }
 
-    function ComplienceScreeningAPI(array $data, string $responseFormat): JsonResponse
+    function ComplienceScreeningAPI(array $data): JsonResponse
     {
         $name = $data["name"];
         $record = DB::table("ComplienceScreeningAPI")
@@ -280,7 +272,7 @@ class ApiMSController extends Controller
         return Responses::ComplienceScreeningAPIResponse($queryResult);
     }
 
-    function CorpCustInq(array $data, string $responseFormat): JsonResponse
+    function CorpCustInq(array $data): JsonResponse
     {
         $cust_id = $data["cust_id"];
         $record = DB::table("CorpCustInq_GeneralDetails")

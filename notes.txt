@@ -1,10 +1,10 @@
 tbl_response_format
 id | function_name | response_format | failed_format
 
-AccountInquiry
+[x] AccountInquiry
 'acctNo' => $data->account_number,
 
-CibScreening
+[x] CibScreening
 if($isCorporate){
     $blackListCustData = [
         'name' => $request->full_name,
@@ -18,17 +18,17 @@ if($isCorporate){
 }
 
 
-ComplienceScreeningAPI
+[x] ComplienceScreeningAPI
 $customerData = [
     'name' => trim($request->customer_name),
 ];
 
-ReqCustInq
+[] ReqCustInq
 $customerData = [
     'acctNo' => $data->account_number,
 ];
 
-DeduplicationCheck
+[] DeduplicationCheck
 if(!is_null($request->citizenship)){
     $customerData = [
         'name' => $customerName,
@@ -40,13 +40,13 @@ if(!is_null($request->citizenship)){
     ];
 }
 
-CorpCustInq
+[x] CorpCustInq
 $customerData = [
                 'cust_id' => $request->customer_id,
             ];
 
 
-SignatureInq
+[] SignatureInq
 $customerData = [
                 'accountNo' => $request->account_number,
             ];
