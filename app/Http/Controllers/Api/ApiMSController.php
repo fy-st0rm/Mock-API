@@ -8,10 +8,14 @@ use App\Http\Formatter;
 use App\Models\ResponseFormat;
 use App\Models\CibScreeningData;
 use App\Models\ComplienceScreeningAPIData;
+use App\Responses;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
+
 
 class ApiMSController extends Controller
 {
@@ -102,35 +106,74 @@ class ApiMSController extends Controller
 
     function AccountInquiry(array $data, string $responseFormat): JsonResponse
     {
-        $responseFormat = str_replace('[[ACCT_SHORT_NAME]]', fake()->name(), $responseFormat);
-        $responseFormat = str_replace('[[SOL_ID]]', fake()->numberBetween(1000, 9999), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_NAME]]', fake()->name(), $responseFormat);
-        $responseFormat = str_replace('[[CUST_ID]]', fake()->randomNumber(9, true), $responseFormat);
-        $responseFormat = str_replace('[[SCHM_CODE]]', fake()->word(), $responseFormat);
-        $responseFormat = str_replace('[[GL_SUB_HEAD_CODE]]', fake()->word(), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_CLS_FLG]]', fake()->randomElement(['Y', 'N']), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_CRNCY_CODE]]', fake()->currencyCode(), $responseFormat);
-        $responseFormat = str_replace('[[SCHM_TYPE]]', fake()->word(), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_OPN_DATE]]', fake()->dateTimeThisDecade()->format('d/m/Y H:i:s'), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_CLS_DATE]]', fake()->dateTimeThisDecade()->format('d/m/Y H:i:s'), $responseFormat);
-        $responseFormat = str_replace('[[FREZ_CODE]]', fake()->randomLetter(), $responseFormat);
-        $responseFormat = str_replace('[[FREZ_REASON_CODE]]', fake()->word(), $responseFormat);
-        $responseFormat = str_replace('[[NRB_DEPOSIT_LOAN_DETAIL]]', fake()->randomLetter(), $responseFormat);
-        $responseFormat = str_replace('[[NRB_DEPOSIT_DETAIL]]', fake()->randomLetter(), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_POA_AS_REC_TYPE]]', fake()->randomLetter(), $responseFormat);
-        $responseFormat = str_replace('[[ACCT_POA_AS_NAME]]', fake()->name(), $responseFormat);
+        $acctNo = $data["acctNo"];
 
-        $jsonData = json_decode($responseFormat);
-        return response()->json($jsonData, 200);
+        $record = DB::table("AccountInquiry_AccountDetail")
+            ->where("acctNo", $acctNo)
+            ->first();
+
+        // If record doesnt exists create a fake one
+        if (!$record) {
+            $custId = fake()->unique()->numerify('000000#####');
+            DB::table('AccountInquiry_AccountDetail')->insert([
+                'acctNo' => $acctNo,
+                'acct_short_name' => fake()->word(),
+                'sol_id' => fake()->numerify('####'),
+                'acct_name' => fake()->name(),
+                'cust_id' => $custId,
+                'schm_code' => fake()->word(),
+                'gl_sub_head_code' => fake()->word(),
+                'acct_cls_flg' => fake()->randomElement(['Y', 'N']),
+                'acct_crncy_code' => fake()->currencyCode(),
+                'schm_type' => fake()->word(),
+                'acct_opn_date' => fake()->dateTimeThisDecade(),
+                'acct_cls_date' => fake()->dateTimeThisDecade(),
+                'frez_code' => fake()->word(),
+                'frez_reason_code' => fake()->word(),
+            ]);
+
+            DB::table('AccountInquiry_MisInformation')->insert([
+                'acctNo' => $acctNo,
+                'nrb_deposit_loan_detail' => fake()->word(),
+                'nrb_deposit_detail' => fake()->word(),
+            ]);
+
+            DB::table('AccountInquiry_RelatedParty')->insert([
+                'acctNo' => $acctNo,
+                'acct_poa_as_rec_type' => fake()->randomElement(['M', 'F', 'O', 'J']),
+                'acct_poa_as_name' => fake()->name(),
+                'cust_id' => $custId,
+            ]);
+        }
+
+        // Querying the data
+        $accountDetail = DB::table("AccountInquiry_AccountDetail")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $misInformation = DB::table("AccountInquiry_MisInformation")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $relatedParty = DB::table("AccountInquiry_RelatedParty")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        return Responses::AccountInquiryResponse(
+            $accountDetail,
+            $misInformation,
+            $relatedParty
+        );
     }
 
     function CibScreening(array $data, string $responseFormat): JsonResponse
     {
-        // Querying the database for matching name and pan or citizenship
-        $record = CibScreeningData::where('name', $data["name"])
+        $name = $data["name"];
+        $record = DB::table("CibScreening")
+            ->where('name', $name)
             ->where(function ($query) use ($data) {
                 if (!empty($data["PanNumber"])) {
-                    $query->where('pan', $data["PanNumber"]);
+                    $query->where('pan_number', $data["PanNumber"]);
                 } elseif (!empty($data["citizenship"])) {
                     $query->where("citizenship_number", $data["citizenship"]);
                 }
@@ -139,12 +182,12 @@ class ApiMSController extends Controller
 
         // If record doesnt exists creating a fake one
         if (!$record) {
-            $record = CibScreeningData::create([
-                'name' => $data["name"],
+            DB::table("CibScreening")->insert([
+                'name' => $name,
                 'dob' => fake()->date(),
                 'gender' => fake()->randomElement(['Male', 'Female', 'Other']),
                 'father_name' => fake()->name('male'),
-                'citizenship_number' => isset($data['citizenship']) ? $data['citizenship'] : fake()->numerify('########'),
+                'citizenship_number' => isset($data["citizenship"]) ? $data["citizenship"]: fake()->numerify('########'),
                 'citizenship_issued_date' => fake()->date(),
                 'citizenship_issued_district' => fake()->city(),
                 'passport_number' => fake()->bothify('??######'),
@@ -153,7 +196,7 @@ class ApiMSController extends Controller
                 'driving_license_issued_date' => fake()->date(),
                 'voter_id_number' => fake()->bothify('VI######'),
                 'voter_id_issued_date' => fake()->date(),
-                'pan' => isset($data["PanNumber"]) ? $data["PanNumber"] : fake()->numerify('##########'),
+                'pan' => fake()->numerify('######'),
                 'pan_issued_date' => fake()->date(),
                 'pan_issued_district' => fake()->city(),
                 'indian_embassy_number' => fake()->numerify('######'),
@@ -162,58 +205,47 @@ class ApiMSController extends Controller
                 'blacklist_number' => fake()->numerify('BL######'),
                 'blacklisted_date' => fake()->date(),
                 'blacklist_type' => fake()->word(),
+                'pan_number' => isset($data["PanNumber"]) ? $data["PanNumber"] : fake()->numerify('##########'),
                 'company_reg_number' => fake()->bothify('CR-######'),
                 'company_reg_date' => fake()->date(),
                 'company_reg_auth' => fake()->company(),
+                'dups' => rand(2, 5),
             ]);
         }
 
-        // Filling up the response
-        $responseFormat = str_replace('[[Name]]', $record->name, $responseFormat);
-        $responseFormat = str_replace('[[DOB]]', $record->dob, $responseFormat);
-        $responseFormat = str_replace('[[Gender]]', $record->gender, $responseFormat);
-        $responseFormat = str_replace('[[FatherName]]', $record->father_name, $responseFormat);
-        $responseFormat = str_replace('[[CitizenshipNumber]]', $record->citizenship_number, $responseFormat);
-        $responseFormat = str_replace('[[CitizenshipIssuedDate]]', $record->citizenship_issued_date, $responseFormat);
-        $responseFormat = str_replace('[[CitizenshipIssuedDistrict]]', $record->citizenship_issued_district, $responseFormat);
-        $responseFormat = str_replace('[[PassportNumber]]', $record->passport_number, $responseFormat);
-        $responseFormat = str_replace('[[PassportExpiryDate]]', $record->passport_expiry_date, $responseFormat);
-        $responseFormat = str_replace('[[DrivingLicenseNumber]]', $record->driving_license_number, $responseFormat);
-        $responseFormat = str_replace('[[DrivingLicenseIssuedDate]]', $record->driving_license_issued_date, $responseFormat);
-        $responseFormat = str_replace('[[VoterIdNumber]]', $record->voter_id_number, $responseFormat);
-        $responseFormat = str_replace('[[VoterIdIssuedDate]]', $record->voter_id_issued_date, $responseFormat);
-        $responseFormat = str_replace('[[PAN]]', $record->pan, $responseFormat);
-        $responseFormat = str_replace('[[PANIssuedDate]]', $record->pan_issued_date, $responseFormat);
-        $responseFormat = str_replace('[[PANIssuedDistrict]]', $record->pan_issued_district, $responseFormat);
-        $responseFormat = str_replace('[[IndianEmbassyNumber]]', $record->indian_embassy_number, $responseFormat);
-        $responseFormat = str_replace('[[IndianEmbassyRegDate]]', $record->indian_embassy_reg_date, $responseFormat);
-        $responseFormat = str_replace('[[Sector]]', $record->sector, $responseFormat);
-        $responseFormat = str_replace('[[BlacklistNumber]]', $record->blacklist_number, $responseFormat);
-        $responseFormat = str_replace('[[BlacklistedDate]]', $record->blacklisted_date, $responseFormat);
-        $responseFormat = str_replace('[[BlacklistType]]', $record->blacklist_type, $responseFormat);
-        $responseFormat = str_replace('[[PanNumber]]', $record->pan_number, $responseFormat);
-        $responseFormat = str_replace('[[CompanyRegNumber]]', $record->company_reg_number, $responseFormat);
-        $responseFormat = str_replace('[[CompanyRegDate]]', $record->company_reg_date, $responseFormat);
-        $responseFormat = str_replace('[[CompanyRegAuth]]', $record->company_reg_auth, $responseFormat);
+        // Querying from the database
+        $queryResult = DB::table("CibScreening")
+            ->where('name', $name)
+            ->where(function ($query) use ($data) {
+                if (!empty($data["PanNumber"])) {
+                    $query->where('pan_number', $data["PanNumber"]);
+                } elseif (!empty($data["citizenship"])) {
+                    $query->where("citizenship_number", $data["citizenship"]);
+                }
+            })
+            ->get();
 
-        $jsonData = json_decode($responseFormat, true);
-        return response()->json($jsonData, 200);
+        return Responses::CibScreeningResponse($queryResult);
     }
 
     function ComplienceScreeningAPI(array $data, string $responseFormat): JsonResponse
     {
-        $record = ComplienceScreeningAPIData::where("name", $data["name"])
+        $name = $data["name"];
+        $record = DB::table("ComplienceScreeningAPI")
+            ->where("name", $name)
             ->first();
 
+        // Create new record if not found
         if (!$record) {
             $address = fake()->address();
             $sanitizedAddress = str_replace("\n", " ", $address); // Replace newline characters with space
 
-            $record = ComplienceScreeningAPIData::create([
+            // Inserting fake data in ComplienceScreeningAPI table
+            DB::table("ComplienceScreeningAPI")->insert([
                 'sno' => fake()->uuid(),
                 'ofac_key' => fake()->uuid(),
                 'ent_num' => fake()->randomNumber(5, true),
-                'name' => $data["name"],
+                'name' => $name,
                 'typeV' => fake()->randomElement(['Individual', 'Organization']),
                 'address' => $sanitizedAddress,  // Use sanitized address here
                 'city' => fake()->city(),
@@ -241,37 +273,145 @@ class ApiMSController extends Controller
             ]);
         }
 
-        // Filling the the response
-        $responseFormat = str_replace('[[sno]]', $record->sno, $responseFormat);
-        $responseFormat = str_replace('[[ofac_key]]', $record->ofac_key, $responseFormat);
-        $responseFormat = str_replace('[[ent_num]]', $record->ent_num, $responseFormat);
-        $responseFormat = str_replace('[[name]]', $record->name, $responseFormat);
-        $responseFormat = str_replace('[[typeV]]', $record->type_v, $responseFormat);
-        $responseFormat = str_replace('[[address]]', $record->address, $responseFormat);
-        $responseFormat = str_replace('[[city]]', $record->city, $responseFormat);
-        $responseFormat = str_replace('[[state]]', $record->state, $responseFormat);
-        $responseFormat = str_replace('[[zip]]', $record->zip, $responseFormat);
-        $responseFormat = str_replace('[[country]]', $record->country, $responseFormat);
-        $responseFormat = str_replace('[[remarks]]', $record->remarks, $responseFormat);
-        $responseFormat = str_replace('[[type_sort]]', $record->type_sort, $responseFormat);
-        $responseFormat = str_replace('[[from_file]]', $record->from_file, $responseFormat);
-        $responseFormat = str_replace('[[source]]', $record->source, $responseFormat);
-        $responseFormat = str_replace('[[manual_ofac_id]]', $record->manual_ofac_id, $responseFormat);
-        $responseFormat = str_replace('[[intEnt]]', $record->int_ent, $responseFormat);
-        $responseFormat = str_replace('[[name2]]', $record->name2, $responseFormat);
-        $responseFormat = str_replace('[[DOB]]', $record->dob, $responseFormat);
-        $responseFormat = str_replace('[[Metaphone]]', $record->metaphone, $responseFormat);
-        $responseFormat = str_replace('[[Alternative_Script]]', $record->alternative_script, $responseFormat);
-        $responseFormat = str_replace('[[SoundexAplha]]', $record->soundex_aplha, $responseFormat);
-        $responseFormat = str_replace('[[DOB_YEAR]]', $record->dob_year, $responseFormat);
-        $responseFormat = str_replace('[[DOB_MONTH]]', $record->dob_month, $responseFormat);
-        $responseFormat = str_replace('[[Other_Name]]', $record->other_name, $responseFormat);
-        $responseFormat = str_replace('[[insertion_time]]', $record->insertion_time, $responseFormat);
-        $responseFormat = str_replace('[[modification_time]]', $record->modification_time, $responseFormat);
-        $responseFormat = str_replace('[[ACCUITY_UPDATE]]', $record->accuity_update, $responseFormat);
-        $responseFormat = str_replace('[[is_deleted]]', $record->is_deleted, $responseFormat);
+        $queryResult = DB::table("ComplienceScreeningAPI")
+            ->where("name", $name)
+            ->get();
 
-        $jsonData = json_decode($responseFormat, true);
-        return response()->json($jsonData, 200);
+        return Responses::ComplienceScreeningAPIResponse($queryResult);
+    }
+
+    function CorpCustInq(array $data, string $responseFormat): JsonResponse
+    {
+        $cust_id = $data["cust_id"];
+        $record = DB::table("CorpCustInq_GeneralDetails")
+            ->where("cust_id", $cust_id)
+            ->first();
+
+        // Create a new record
+        if (!$record) {
+            // Insert into CorpCustInq_GeneralDetails
+            DB::table('CorpCustInq_GeneralDetails')->insert([
+                'cust_id' => $cust_id,
+                'cust_title_code' => fake()->randomElement(['Mr', 'Ms', 'M/S']),
+                'cust_name' => fake()->company(),
+                'cust_short_name' => substr(fake()->company(), 0, 10),
+                'cust_sex' => fake()->randomElement(['M', 'F', 'O']),
+                'cust_minor_flg' => fake()->randomElement(['Y', 'N']),
+                'date_of_birth' => fake()->date('Y-m-d', '2005-01-01'),
+                'cust_marital_status' => fake()->randomElement(['001', '002', '003', '004']),
+                'cust_emp_id' => fake()->optional()->numerify('EMP###'),
+                'mobile_no' => fake()->optional()->phoneNumber(),
+                'psprt_num' => fake()->optional()->regexify('[A-Z]{2}[0-9]{6}'),
+                'psprt_issu_date' => fake()->optional()->date(),
+                'psprt_det' => fake()->optional()->text(20),
+                'psprt_exp_date' => fake()->optional()->date(),
+                'address_type' => fake()->randomElement(['P', 'C', 'B']),
+                'cust_nre_flg' => fake()->randomElement(['Y', 'N']),
+                'name_screening_id_no' => fake()->numerify('######'),
+                'idtype' => fake()->randomElement(['INST', 'IND']),
+                'idno' => fake()->numerify('#########/###/###'),
+                'idissuedate' => fake()->date('Y-m-d'),
+                'issuedistrict' => fake()->city(),
+                'idregisteredin' => fake()->randomElement(['001', '002', '003']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Insert into CorpCustInq_RetCustAddrInfo
+            foreach (['CUSTCOMMADD', 'CUSTEMPADD', 'CUSTPERMADD'] as $type) {
+                DB::table('CorpCustInq_RetCustAddrInfo')->insert([
+                    'customer_id' => $cust_id,
+                    'address_type' => $type,
+                    'address1' => fake()->optional()->address(),
+                    'address2' => fake()->optional()->address(),
+                    'municipality_vdc_name' => fake()->optional()->city(),
+                    'ward_no' => fake()->optional()->numberBetween(1, 20),
+                    'zonee' => fake()->randomElement(['BAGM', 'LUMB', 'GAND']),
+                    'city_code' => fake()->city(),
+                    'district_code' => fake()->city(),
+                    'email_id' => fake()->optional()->safeEmail(),
+                    'cntry_code' => fake()->countryCode(),
+                    'phone_num1' => fake()->optional()->phoneNumber(),
+                    'phone_num2' => fake()->optional()->phoneNumber(),
+                    'del_flg' => fake()->randomElement(['Y', 'N']),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Insert into CorpCustInq_MisInformation
+            DB::table('CorpCustInq_MisInformation')->insert([
+                'customer_id' => $cust_id,
+                'cust_occp_code' => fake()->numberBetween(1, 10),
+                'cust_othr_bank_code' => fake()->numerify('###'),
+                'cust_grp' => fake()->randomElement(['1', '2', '3']),
+                'cust_status' => fake()->randomElement(['0', '1']),
+                'cdd_ecdd_date' => fake()->date('Y-m-d'),
+                'constitution' => fake()->randomElement(['001', '002', '003']),
+                'cust_free_text' => fake()->optional()->text(50),
+                'annual_turn_over' => fake()->randomElement(['5', '10', '15']),
+                'education_qualification' => fake()->randomElement(['1', '2', '3', '4', '5']),
+                'religion' => fake()->randomElement(['1', '2', '3', '4', '5']),
+                'annual_turn_over_as_on' => fake()->date('Y-m-d'),
+                'rm_code' => fake()->numerify('###'),
+                'risk_category' => fake()->randomElement(['A', 'B', 'C']),
+                'total_no_of_annual_txn' => fake()->randomElement(['A', 'B', 'C']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Insert into CorpCustInq_CorpMiscInfoData
+            $items = rand(1, 5);
+            for ($i = 0; $i < $items; $i++) {
+                DB::table('CorpCustInq_CorpMiscInfoData')->insert([
+                    'customer_id' => $cust_id,
+                    'person_reltn_name' => fake()->name(), // Generate a random name
+                    'cust_reltn_code' => fake()->randomElement(['SHARE', 'OWNER']),
+                    'del_flg' => fake()->randomElement(['Y', 'N']),
+                    'cust_id' => fake()->optional()->numerify('###'),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            // Insert into CorpCustInq_CurrencyInfo
+            DB::table('CorpCustInq_CurrencyInfo')->insert([
+                'customer_id' => $cust_id,
+                'crncy_code' => fake()->currencyCode(),
+                'del_flg' => fake()->randomElement(['Y', 'N']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Now querying the data from the database
+        $generalDetails = DB::table("CorpCustInq_GeneralDetails")
+            ->where("cust_id", $cust_id)
+            ->get();
+
+        $reqCustAddrInfo = DB::table("CorpCustInq_RetCustAddrInfo")
+            ->where("customer_id", $cust_id)
+            ->get();
+
+        $misInformation = DB::table("CorpCustInq_MisInformation")
+            ->where("customer_id", $cust_id)
+            ->get();
+
+        $corpMiscInfoData = DB::table("CorpCustInq_CorpMiscInfoData")
+            ->where("customer_id", $cust_id)
+            ->get();
+
+        $currencyInfo = DB::table("CorpCustInq_CurrencyInfo")
+            ->where("customer_id", $cust_id)
+            ->get();
+
+        // Convert to the required format
+        return Responses::CorpCustInqResponse(
+            $generalDetails,
+            $reqCustAddrInfo,
+            $misInformation,
+            $corpMiscInfoData,
+            $currencyInfo
+        );
     }
 }

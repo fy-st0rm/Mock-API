@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('complience_screening_api', function (Blueprint $table) {
+        Schema::create('ComplienceScreeningAPI', function (Blueprint $table) {
             $table->id();
             $table->string('sno')->nullable();
             $table->string('ofac_key')->nullable();
@@ -44,6 +44,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('complience_screening_api');
+        Schema::dropIfExists('ComplienceScreeningAPI');
     }
 };

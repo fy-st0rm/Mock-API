@@ -3,8 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Validators\AccountInquiryValidator;
+use App\Validators\AccountInquiryValidator as ReqCustInqValidator;
 use App\Validators\CibScreeningValidator;
 use App\Validators\ComplienceScreeningAPIValidator;
+use App\Validators\CorpCustInqValidator;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Contracts\Validation\Validator as ValidationContract;
@@ -18,6 +20,8 @@ class ExecuteRequest extends FormRequest
         "AccountInquiry" => AccountInquiryValidator::class,
         "CibScreening" => CibScreeningValidator::class,
         "ComplienceScreeningAPI" => ComplienceScreeningAPIValidator::class,
+        //        "ReqCustInq" => ReqCustInqValidator::class,
+        "CorpCustInq" => CorpCustInqValidator::class,
     ];
 
     public function authorize(): bool

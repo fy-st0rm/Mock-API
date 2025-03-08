@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cibscreening_datas', function (Blueprint $table) {
+        Schema::create('CibScreening', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->date('dob');
@@ -39,6 +39,7 @@ return new class extends Migration
             $table->string('company_reg_number')->nullable()->unique();
             $table->date('company_reg_date')->nullable();
             $table->string('company_reg_auth')->nullable();
+            $table->integer('dups');
             $table->timestamps();
         });
     }
@@ -48,6 +49,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cibscreening_datas');
+        Schema::dropIfExists('CibScreening');
     }
 };
