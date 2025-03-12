@@ -20,8 +20,8 @@ class ExecuteRequest extends FormRequest
         "AccountInquiry" => AccountInquiryValidator::class,
         "CibScreening" => CibScreeningValidator::class,
         "ComplienceScreeningAPI" => ComplienceScreeningAPIValidator::class,
-        //        "ReqCustInq" => ReqCustInqValidator::class,
         "CorpCustInq" => CorpCustInqValidator::class,
+        "RetCustInq" => ReqCustInqValidator::class,
     ];
 
     public function authorize(): bool

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin'),
         ]);
 
+/*
         // Filling the response formats
         ResponseFormat::create([
             "function" => "AccountInquiry",
@@ -55,5 +56,6 @@ class DatabaseSeeder extends Seeder
             "function" => "SignatureInq",
             "response" => ''
         ]);
+*/
     }
 }

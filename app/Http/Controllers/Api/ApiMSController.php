@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 
 class ApiMSController extends Controller
@@ -175,7 +176,7 @@ class ApiMSController extends Controller
         // If record doesnt exists creating a fake one
         if (!$record) {
             DB::table("CibScreening")->insert([
-                'name' => $name,
+                'name' => $name(),
                 'dob' => fake()->date(),
                 'gender' => fake()->randomElement(['Male', 'Female', 'Other']),
                 'father_name' => fake()->name('male'),
@@ -237,9 +238,9 @@ class ApiMSController extends Controller
                 'sno' => fake()->uuid(),
                 'ofac_key' => fake()->uuid(),
                 'ent_num' => fake()->randomNumber(5, true),
-                'name' => $name,
+                'name' => $name(),
                 'typeV' => fake()->randomElement(['Individual', 'Organization']),
-                'address' => $sanitizedAddress,  // Use sanitized address here
+                'address' => $sanitizedaddress(),  // Use sanitized address here
                 'city' => fake()->city(),
                 'state' => fake()->state(),
                 'zip' => fake()->postcode(),
@@ -404,6 +405,182 @@ class ApiMSController extends Controller
             $misInformation,
             $corpMiscInfoData,
             $currencyInfo
+        );
+    }
+
+    function RetCustInq(array $data): JsonResponse
+    {
+        $acctNo = $data["acctNo"];
+        $record = DB::table("RetCustInq_GeneralDetails")
+            ->where("acctNo", $acctNo)
+            ->first();
+
+        // If the record doesnt exist create a fake one
+        if (!$record) {
+            // Inserting general details
+            DB::table('RetCustInq_GeneralDetails')->insert([
+                'acctNo' => $acctNo,
+                'cust_id' => fake()->unique()->numerify('##########'),
+                'cust_title_code' => fake()->randomElement(['MR', 'MRS', 'MS', 'DR']),
+                'cust_name' => fake()->name(),
+                'cust_short_name' => fake()->firstName . ' ' . Str::substr(fake()->lastname(), 0, 1),
+                'cust_sex' => fake()->randomElement(['M', 'F']),
+                'cust_minor_flg' => fake()->randomElement(['Y', 'N']),
+                'date_of_birth' => fake()->date('Y-m-d', '-18 years'),
+                'cust_marital_status' => fake()->randomElement(['001', '002', '003']),
+                'cust_emp_id' => fake()->optional()->numerify('EMP####'),
+                'mobile_no' => fake()->optional()->phoneNumber(),
+                'psprt_num' => fake()->optional()->regexify('[A-Z0-9]{9}'),
+                'psprt_issu_date' => fake()->optional()->date(),
+                'psprt_det' => fake()->optional()->sentence(),
+                'psprt_exp_date' => fake()->optional()->date(),
+                'address_type' => fake()->randomElement(['C', 'P']), // C: Current, P: Permanent
+                'cust_nre_flg' => fake()->randomElement(['Y', 'N']),
+                'name_screening_id_no' => fake()->unique()->numerify('######'),
+                'idtype' => fake()->randomElement(['CTZ', 'PAS', 'DL']),
+                'idno' => fake()->unique()->numerify('######'),
+                'idissuedate' => fake()->date(),
+                'issuedistrict' => fake()->city(),
+                'idregisteredin' => fake()->randomNumber(3, true),
+            ]);
+
+            // Inserting guardian details
+            $items = rand(0, 3);
+            for ($i = 0; $i < $items; $i++) {
+                DB::table('RetCustInq_GurdianDetails')->insert([
+                    'acctNo' => $acctNo,
+                    'minor_date_of_birth' => fake()->date('Y-m-d', '-18 years'),
+                    'minor_attain_major_date' => fake()->date('Y-m-d', '+18 years'),
+                    'minor_guard_code' => fake()->randomElement(['M', 'F']),
+                    'minor_guard_addr1' => fake()->address(),
+                    'minor_guard_addr2' => fake()->optional()->address(),
+                    'minor_guard_city_code' => fake()->city(),
+                    'minor_guard_state_code' => fake()->state(),
+                    'minor_guard_cntry_code' => fake()->countryCode(),
+                    'del_flg' => fake()->randomElement(['Y', 'N']),
+                    'minor_guard_name' => fake()->name(),
+                ]);
+            }
+
+            // Inserting address info
+            foreach (['CUSTCOMMADD', 'CUSTEMPADD', 'CUSTPERMADD'] as $type) {
+                DB::table('RetCustInq_RetCustAddrInfo')->insert([
+                    'acctNo' => $acctNo,
+                    'address_type' => $type,
+                    'address1' => fake()->address(),
+                    'address2' => fake()->optional()->address(),
+                    'municipality_vdc_name' => fake()->city(),
+                    'ward_no' => fake()->optional()->numberBetween(1, 100),
+                    'zonee' => fake()->optional()->state(),
+                    'city_code' => fake()->city(),
+                    'district_code' => fake()->stateAbbr(),
+                    'email_id' => fake()->optional()->safeEmail(),
+                    'cntry_code' => fake()->countryCode(),
+                    'phone_num1' => fake()->optional()->phoneNumber(),
+                    'phone_num2' => fake()->optional()->phoneNumber(),
+                    'del_flg' => fake()->randomElement(['Y', 'N']),
+                ]);
+            }
+
+            // Inserting misinformations
+            DB::table('RetCustInq_MisInformation')->insert([
+                'acctNo' => $acctNo,
+                'cust_occp_code' => fake()->randomElement(['1', '2', '3', '4', '5']),
+                'cust_othr_bank_code' => fake()->randomElement(['1001', '1002', '1003', '1004']),
+                'cust_grp' => fake()->randomElement(['1', '2', '3']),
+                'cust_status' => fake()->randomElement(['1', '2', '3']),
+                'cdd_ecdd_date' => fake()->date('Y-m-d', '-10 years'),
+                'constitution' => fake()->randomElement(['010', '020', '030']),
+                'cust_free_text' => fake()->optional()->sentence(),
+                'annual_turn_over' => fake()->optional()->randomFloat(2, 1000, 100000),
+                'education_qualification' => fake()->randomElement(['1', '2', '3', '4']),
+                'religion' => fake()->randomElement(['1', '2', '3']),
+                'annual_turn_over_as_on' => fake()->optional()->date('Y-m-d'),
+                'rm_code' => fake()->randomElement(['001', '002', '003']),
+                'risk_category' => fake()->randomElement(['A', 'B', 'C']),
+                'total_no_of_annual_txn' => fake()->randomElement(['A', 'B', 'C']),
+            ]);
+
+            // Inserting entity relationships
+            $items = rand(1, 3);
+            for ($i = 0; $i < $items; $i++) {
+                DB::table('RetCustInq_EntityRelationShip')->insert([
+                    'acctNo' => $acctNo,
+                    'person_reltn_name' => fake()->name(),
+                    'cust_reltn_code' => fake()->randomElement(['MOTH', 'FATH', 'SIB', 'SPO', 'FRND']),
+                    'del_flg' => fake()->randomElement(['Y', 'N']),
+                    'cust_id' => fake()->unique()->numerify('##########'),
+                ]);
+            }
+
+            // Inserting currency info
+            $items = rand(1, 3);
+            for ($i = 0; $i < $items; $i++) {
+                DB::table('RetCustInq_CurrencyInfo')->insert([
+                    'acctNo' => $acctNo,
+                    'crncy_code' => fake()->randomElement(['NPR', 'USD', 'EUR', 'INR', 'GBP']),
+                    'del_flg' => fake()->randomElement(['Y', 'N']),
+                ]);
+            }
+
+            // Inserting currency info
+            $items = rand(1, 3);
+            for ($i = 0; $i < $items; $i++) {
+                DB::table('RetCustInq_AccountOpened')->insert([
+                    'accountNo' => $acctNo,
+                    'acct_name' => fake()->name(),
+                    'cust_id' => fake()->numerify('C########'),
+                    'acct_no' => fake()->unique()->numerify('A#####'),
+                    'schm_code' => fake()->word(),
+                    'schm_desc' => fake()->word(),
+                    'acct_status' => fake()->randomElement(['D', 'C', 'A']),
+                    'frez_code' => fake()->randomElement(['D', 'F']),
+                    'gl_sub_head_code' => fake()->word(),
+                    'acct_cls_flg' => fake()->randomElement(['Y', 'N']),
+                    'acct_opn_date' => fake()->dateTimeThisDecade(),
+                    'acct_cls_date' => fake()->dateTimeThisDecade(),
+                ]);
+            }
+        }
+
+        // Querying all the data
+        $generalDetails = DB::table("RetCustInq_GeneralDetails")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $gurdianDetails = DB::table("RetCustInq_GurdianDetails")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $addressInfo = DB::table("RetCustInq_RetCustAddrInfo")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $misInformation = DB::table("RetCustInq_MisInformation")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $entityRelationship = DB::table("RetCustInq_EntityRelationShip")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $currencyInfo = DB::table("RetCustInq_CurrencyInfo")
+            ->where("acctNo", $acctNo)
+            ->get();
+
+        $accountOpened = DB::table("RetCustInq_AccountOpened")
+            ->where("accountNo", $acctNo)
+            ->get();
+
+        // Convert to the required format
+        return Responses::RetCustInqResponse(
+            $generalDetails,
+            $gurdianDetails,
+            $addressInfo,
+            $misInformation,
+            $entityRelationship,
+            $currencyInfo,
+            $accountOpened
         );
     }
 }

@@ -245,4 +245,134 @@ class Responses
 
         return response()->json($response);
     }
+
+    public static function RetCustInqResponse(
+        Collection $generalDetails,
+        Collection $gurdianDetails,
+        Collection $addressInfo,
+        Collection $misInformation,
+        Collection $entityRelationship,
+        Collection $currencyInfo,
+        Collection $accountOpened
+    ): JsonResponse
+    {
+        $response = [
+            "Code" => "0",
+            "Message" => "Operation Successfull",
+            "Data" => [
+                "RetCustInqResponse" => [
+                    "RetCustInqRs" => [
+                        "GeneralDetails" => $generalDetails->map(function ($detail) {
+                            return [
+                                "CUST_ID" => $detail->cust_id,
+                                "CUST_TITLE_CODE" => $detail->cust_title_code,
+                                "CUST_NAME" => $detail->cust_name,
+                                "CUST_SHORT_NAME" => $detail->cust_short_name,
+                                "CUST_SEX" => $detail->cust_sex,
+                                "CUST_MINOR_FLG" => $detail->cust_minor_flg,
+                                "DATE_OF_BIRTH" => $detail->date_of_birth,
+                                "CUST_MARITAL_STATUS" => $detail->cust_marital_status,
+                                "CUST_EMP_ID" => $detail->cust_emp_id,
+                                "MOBILE_NO" => $detail->mobile_no,
+                                "PSPRT_NUM" => $detail->psprt_num,
+                                "PSPRT_ISSU_DATE" => $detail->psprt_issu_date,
+                                "PSPRT_DET" => $detail->psprt_det,
+                                "PSPRT_EXP_DATE" => $detail->psprt_exp_date,
+                                "ADDRESS_TYPE" => $detail->address_type,
+                                "CUST_NRE_FLG" => $detail->cust_nre_flg,
+                                "NAME_SCREENING_ID_NO" => $detail->name_screening_id_no,
+                                "IDTYPE" => $detail->idtype,
+                                "IDNO" => $detail->idno,
+                                "IDISSUEDATE" => $detail->idissuedate,
+                                "ISSUEDISTRICT" => $detail->issuedistrict,
+                                "IDREGISTEREDIN" => $detail->idregisteredin,
+                            ];
+                        }),
+                        "GurdianDetails" => $gurdianDetails->map(function ($details) {
+                            return [
+                                "MINOR_DATE_OF_BIRTH" => $details->minor_date_of_birth,
+                                "MINOR_ATTAIN_MAJOR_DATE" => $details->minor_attain_major_date,
+                                "MINOR_GUARD_CODE" => $details->minor_guard_code,
+                                "MINOR_GUARD_ADDR1" => $details->minor_guard_addr1,
+                                "MINOR_GUARD_ADDR2" => $details->minor_guard_addr2,
+                                "MINOR_GUARD_CITY_CODE" => $details->minor_guard_city_code,
+                                "MINOR_GUARD_STATE_CODE" => $details->minor_guard_state_code,
+                                "MINOR_GUARD_CNTRY_CODE" => $details->minor_guard_cntry_code,
+                                "DEL_FLG" => $details->del_flg,
+                                "MINOR_GUARD_NAME" => $details->minor_guard_name
+                            ];
+                        }),
+                        "RetCustAddrInfo" => $addressInfo->map(function ($detail) {
+                            return [
+                                "ADDRESS_TYPE" => $detail->address_type,
+                                "ADDRESS1" => $detail->address1,
+                                "ADDRESS2" => $detail->address2,
+                                "MUNICIPALITY_VDC_NAME" => $detail->municipality_vdc_name,
+                                "WARD_NO" => $detail->ward_no,
+                                "ZONEE" => $detail->zonee,
+                                "CITY_CODE" => $detail->city_code,
+                                "DISTRICT_CODE" => $detail->district_code,
+                                "EMAIL_ID" => $detail->email_id,
+                                "CNTRY_CODE" => $detail->cntry_code,
+                                "PHONE_NUM1" => $detail->phone_num1,
+                                "PHONE_NUM2" => $detail->phone_num2,
+                                "DEL_FLG" => $detail->del_flg,
+                            ];
+                        }),
+                        "MisInformation" => $misInformation->map(function ($detail) {
+                            return [
+                                "CUST_OCCP_CODE" => $detail->cust_occp_code,
+                                "CUST_OTHR_BANK_CODE" => $detail->cust_othr_bank_code,
+                                "CUST_GRP" => $detail->cust_grp,
+                                "CUST_STATUS" => $detail->cust_status,
+                                "CDD_ECDD_DATE" => $detail->cdd_ecdd_date,
+                                "CONSTITUTION" => $detail->constitution,
+                                "CUST_FREE_TEXT" => $detail->cust_free_text,
+                                "ANNUAL_TURN_OVER" => $detail->annual_turn_over,
+                                "EDUCATION_QUALIFACTION" => $detail->education_qualification,
+                                "REGILION" => $detail->religion,
+                                "ANNUAL_TURN_OVER_AS_ON" => $detail->annual_turn_over_as_on,
+                                "RM_CODE" => $detail->rm_code,
+                                "RISK_CATEGORY" => $detail->risk_category,
+                                "TOTAL_NO_OF_ANNUAL_TXN" => $detail->total_no_of_annual_txn,
+                            ];
+                        }),
+                        "EntityRelationShip" => $entityRelationship->map(function ($detail) {
+                            return [
+                                "PERSON_RELTN_NAME" => $detail->person_reltn_name,
+                                "CUST_RELTN_CODE" => $detail->cust_reltn_code,
+                                "DEL_FLG" => $detail->del_flg,
+                                "CUST_ID" => $detail->cust_id,
+                            ];
+                        }),
+                        "CurrencyInfo" => $currencyInfo->map(function ($detail) {
+                            return [
+                                "crncy_code" => $detail->crncy_code,
+                                "del_flg" => $detail->del_flg,
+                            ];
+                        }),
+                        "AccountOpened" => $accountOpened->map(function ($detail) {
+                            return [
+                                "ACCT_NAME" => $detail->acct_name,
+                                "CUST_ID" => $detail->cust_id,
+                                "ACCT_NO" => $detail->acct_no,
+                                "SCHM_CODE" => $detail->schm_code,
+                                "SCHM_DESC" => $detail->schm_desc,
+                                "ACCT_STATUS" => $detail->acct_status,
+                                "FREZ_CODE" => $detail->frez_code,
+                                "GL_SUB_HEAD_CODE" => $detail->gl_sub_head_code,
+                                "ACCT_CLS_FLG" => $detail->acct_cls_flg,
+                                "ACCT_OPN_DATE" => $detail->acct_opn_date,
+                                "ACCT_CLS_DATE" => $detail->acct_cls_date,
+                            ];
+                        }),
+                    ]
+                ]
+            ],
+            "DeveloperMessage" => null,
+            "Errors" => null
+        ];
+
+        return response()->json($response);
+    }
 }
