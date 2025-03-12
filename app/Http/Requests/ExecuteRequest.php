@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Validators\AccountInquiryValidator;
 use App\Validators\AccountInquiryValidator as ReqCustInqValidator;
+use App\Validators\SignatureInqValidator;
 use App\Validators\CibScreeningValidator;
 use App\Validators\ComplienceScreeningAPIValidator;
 use App\Validators\CorpCustInqValidator;
@@ -22,6 +23,7 @@ class ExecuteRequest extends FormRequest
         "ComplienceScreeningAPI" => ComplienceScreeningAPIValidator::class,
         "CorpCustInq" => CorpCustInqValidator::class,
         "RetCustInq" => ReqCustInqValidator::class,
+        "SignatureInq" => SignatureInqValidator::class,
     ];
 
     public function authorize(): bool

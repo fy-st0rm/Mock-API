@@ -176,7 +176,7 @@ class ApiMSController extends Controller
         // If record doesnt exists creating a fake one
         if (!$record) {
             DB::table("CibScreening")->insert([
-                'name' => $name(),
+                'name' => $name,
                 'dob' => fake()->date(),
                 'gender' => fake()->randomElement(['Male', 'Female', 'Other']),
                 'father_name' => fake()->name('male'),
@@ -238,7 +238,7 @@ class ApiMSController extends Controller
                 'sno' => fake()->uuid(),
                 'ofac_key' => fake()->uuid(),
                 'ent_num' => fake()->randomNumber(5, true),
-                'name' => $name(),
+                'name' => $name,
                 'typeV' => fake()->randomElement(['Individual', 'Organization']),
                 'address' => $sanitizedaddress(),  // Use sanitized address here
                 'city' => fake()->city(),
@@ -582,5 +582,37 @@ class ApiMSController extends Controller
             $currencyInfo,
             $accountOpened
         );
+    }
+
+    function SignatureInq(array $data): JsonResponse
+    {
+        $acctNo = $data["accountNo"];
+        $record = DB::table("SignatureInq")
+            ->where("accountNo", $acctNo)
+            ->first();
+
+        // Creating a fake data
+        if (!$record) {
+            DB::table('SignatureInq')->insert([
+                'accountNo' => $acctNo,
+                'signArea' => base64_encode(fake()->sha256()),
+                'remarks' => fake()->optional()->sentence(),
+                'imageSrlNum' => fake()->optional()->numerify('IMG####'),
+                'entityCreFlg' => fake()->randomElement(['Y', 'N']),
+                'solDesc' => fake()->optional()->sentence(),
+                'imageAccessCode' => fake()->optional()->word(),
+                'lchgUserId' => fake()->userName(),
+                'lchgTime' => fake()->dateTimeBetween('-2 years', 'now'),
+                'rcreTime' => fake()->dateTimeBetween('-5 years', '-2 years'),
+                'delFlg' => fake()->randomElement(['Y', 'N']),
+            ]);
+        }
+
+        // Querying the data
+        $queryResult = DB::table("SignatureInq")
+            ->where("accountNo", $acctNo)
+            ->get();
+
+        return Responses::SignatureInqResponse($queryResult);
     }
 }

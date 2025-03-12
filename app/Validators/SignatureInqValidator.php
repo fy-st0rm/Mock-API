@@ -5,22 +5,19 @@ namespace App\Validators;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\MessageBag;
 
-class AccountInquiryValidator
+class SignatureInqValidator
 {
     public static function rules(): array
     {
         return [
-            "acctNo" => "required_without:accountNo|string",
-            "accountNo" => "required_without:acctNo|string",
+            "accountNo" => "required|string",
         ];
     }
 
     public static function errorMessages(): array
     {
         return [
-            "acctNo.required_without" => "The acctNo field is required if accountNo is not present",
-            "accountNo.required_without" => "The accountNo field is required if acctNo is not present",
-            "acctNo.string" => "The acctNo field must be a string",
+            "accountNo.required" => "The accountNo field is required",
             "accountNo.string" => "The accountNo field must be a string",
         ];
     }

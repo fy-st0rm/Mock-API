@@ -375,4 +375,30 @@ class Responses
 
         return response()->json($response);
     }
+
+    public static function SignatureInqResponse(Collection $queryResult): JsonResponse
+    {
+        $response = [
+            "Code" => "0",
+            "Message" => "Operation Successfull",
+            "Data" => $queryResult->map(function ($detail) {
+                return [
+                    "signArea" => $detail->signArea,
+                    "remarks" => $detail->remarks,
+                    "imageSrlNum" => $detail->imageSrlNum,
+                    "entityCreFlg" => $detail->entityCreFlg,
+                    "solDesc" => $detail->solDesc,
+                    "imageAccessCode" => $detail->imageAccessCode,
+                    "lchgUserId" => $detail->lchgUserId,
+                    "lchgTime" => $detail->lchgTime,
+                    "rcreTime" => $detail->rcreTime,
+                    "delFlg" => $detail->delFlg
+                ];
+            }),
+            "DeveloperMessage" => null,
+            "Errors" => null
+        ];
+
+        return response()->json($response);
+    }
 }

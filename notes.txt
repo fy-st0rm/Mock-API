@@ -23,7 +23,7 @@ $customerData = [
     'name' => trim($request->customer_name),
 ];
 
-[] ReqCustInq
+[x] ReqCustInq
 $customerData = [
     'acctNo' => $data->account_number,
 ];
@@ -46,7 +46,7 @@ $customerData = [
             ];
 
 
-[] SignatureInq
+[x] signatureinq
 $customerData = [
                 'accountNo' => $request->account_number,
             ];
